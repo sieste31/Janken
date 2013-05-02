@@ -71,6 +71,10 @@ namespace JankenReferee
             return;
         }
 
+        /// <summary>
+        /// 戻りがない場合のプロシージャコール（非ブロック）
+        /// </summary>
+        /// <param name="msg"></param>
         private void Send(String msg)
         {
             try
@@ -97,6 +101,11 @@ namespace JankenReferee
             }
         }
 
+        /// <summary>
+        /// 戻りがある場合のプロシージャコール（ブロック）
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
         private String Call(String msg)
         {
             try
@@ -125,6 +134,10 @@ namespace JankenReferee
                 {
                     resSize = ns.Read(resBytes, 0, resBytes.Length);
                     ms.Write(resBytes, 0, resSize);
+                    if (resSize == 0) //切断
+                    {
+                        throw new Exception("Connection Closed");
+                    }
                 } while (ms.Length < 64);
 
                 String ret = System.Text.Encoding.ASCII.GetString(ms.ToArray()).TrimEnd('\0');

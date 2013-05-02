@@ -9,6 +9,8 @@ namespace SampleJankenAgent
         static void Main(string[] args)
         {
             int port;
+            var jankenServer = new JankenLib.JankenServer(new SampleAgent("SAMPLE"));
+
             try
             {
                 port = Int32.Parse(args[0]);
@@ -33,8 +35,7 @@ namespace SampleJankenAgent
 
                 Console.WriteLine("Connect!");
 
-                var jankenServer = new JankenLib.JankenServer(client, new SampleAgent("SAMPLE"));
-                jankenServer.Start();
+                jankenServer.Start(client);
 
                 jankenServer.Stop();
                 // サーバ終了

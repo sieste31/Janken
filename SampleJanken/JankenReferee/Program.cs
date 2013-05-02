@@ -65,11 +65,11 @@ namespace JankenReferee
                 int draw = 0;
                 int p2_win = 0;
 
-                for (int i = 0; i < time; i++)
+                for (int i = 1; i <= time; i++)
                 {
                     // 1手目
                     hands[0, 0] = proxy1.GetFirstHand(i);
-                    hands[1, 0] = proxy1.GetFirstHand(i);
+                    hands[1, 0] = proxy2.GetFirstHand(i);
 
                     // 2手目
                     hands[0, 1] = proxy1.GetSecondHand(i, hands[1, 0]);
@@ -78,6 +78,9 @@ namespace JankenReferee
                     // 3手目
                     hands[0, 2] = proxy1.GetThirdHand(i, hands[1, 1]);
                     hands[1, 2] = proxy2.GetThirdHand(i, hands[0, 1]);
+
+                    Console.WriteLine("{0},{1},{2}:{3},{4},{5}", hands[0, 0], hands[0, 1], hands[0, 2],
+                                                                 hands[1, 0], hands[1, 1], hands[1, 2]);
 
                     // 勝敗の記録
                     int diff = hands[0, 2].CompareStrong(hands[1, 2]);

@@ -14,19 +14,19 @@ namespace JankenLib
         private IJanken handler;
         private CancellationTokenSource cts;
 
-        public JankenServer(TcpClient client, IJanken handler)
+        public JankenServer( IJanken handler)
         {
-            this.client = client;
+
             this.handler = handler;
         }
 
         /// <summary>
         /// サーバースタート
         /// </summary>
-        public void Start(){
+        public void Start(TcpClient client){
             //this.cts = new CancellationTokenSource();
             //var t = Task.Factory.StartNew(this.ServerStart, this.cts.Token);
-
+            this.client = client;
             ServerStart();
         }
 
@@ -134,17 +134,17 @@ namespace JankenLib
                     }
                 case "GetFirstHand":
                     {
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetFirstHand(argc[0]).ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetFirstHand(argc[0]).ToString("D"));
                         break;
                     }
                 case "GetSecondHand":
                     {
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetSecondHand(argc[0], (Hand)argc[1]).ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetSecondHand(argc[0], (Hand)argc[1]).ToString("D"));
                         break;
                     }
                 case "GetThirdHand":
                     {
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetThirdHand(argc[0], (Hand)argc[1]).ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetThirdHand(argc[0], (Hand)argc[1]).ToString("D"));
                         break;
                     }
                 default:

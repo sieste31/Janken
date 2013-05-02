@@ -6,9 +6,9 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace SampleJankenAgent
+namespace JankenLib
 {
-    class JankenServer
+    public class JankenServer
     {
         private TcpClient client;
         private IJanken handler;
@@ -109,15 +109,24 @@ namespace SampleJankenAgent
             byte[] buff = null;
 
             // メッセージの解析
-            var reg = new System.Text.RegularExpressions.Regex(@"^(?<method>[a-zA-Z0-9_]+) *\((?<args>.*)\) *$");
+            var reg = new System.Text.RegularExpressions.Regex(@"^(?<hasReturn>\?=)?(?<method>[a-zA-Z0-9_]+) *\((?<args>.*)\) *; *$");
             var m = reg.Match(msg);
 
             // 部分文字列の取り出し
             var method = m.Groups["method"].Value;
             var args = m.Groups["args"].Value;
 
+            int tmp;
+            var argc = (from a in args.Split(',') select Int32.TryParse(a, out tmp) ? tmp : 0).ToArray();
+            var argv = argc.Length;
+
             switch (method)
             {
+                case "SetResult":
+                    {
+                        this.handler.SetResult(argc[0], argc[1], (Hand)argc[2]);
+                        break;
+                    }
                 case "GetName":
                     {
                         buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetName());
@@ -125,21 +134,17 @@ namespace SampleJankenAgent
                     }
                 case "GetFirstHand":
                     {
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetFirstHand().ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetFirstHand(argc[0]).ToString());
                         break;
                     }
                 case "GetSecondHand":
                     {
-                        Hand tmp;
-                        var arg = (from a in args.Split(',') select Enum.TryParse<Hand>(a, out tmp) ? tmp : Hand.NoHand).ToArray();
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetSecondHand(arg[0], arg[1]).ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetSecondHand(argc[0], (Hand)argc[1]).ToString());
                         break;
                     }
                 case "GetThirdHand":
                     {
-                        Hand tmp;
-                        var arg = (from a in args.Split(',') select Enum.TryParse<Hand>(a, out tmp) ? tmp : Hand.NoHand).ToArray();
-                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetThirdHand(arg[0], arg[1], arg[2], arg[3]).ToString());
+                        buff = System.Text.Encoding.ASCII.GetBytes(this.handler.GetThirdHand(argc[0], (Hand)argc[1]).ToString());
                         break;
                     }
                 default:

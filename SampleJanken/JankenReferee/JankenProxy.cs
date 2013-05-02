@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net.Sockets;
+using System.Net;
+
+using JankenLib;
 
 namespace JankenReferee
 {
-    class JankenProxy : SampleJankenAgent.IJanken
+    class JankenProxy : JankenLib.IJanken
     {
         private TcpClient client;
+
         public JankenProxy(TcpClient client){
             this.client = client;
         }
@@ -24,45 +28,76 @@ namespace JankenReferee
 
         public string GetName()
         {
-            String msg = "GetName()";
+            String msg = "?=GetName();";
 
-            return this.Send(msg);
+            return this.Call(msg);
         }
 
-        public SampleJankenAgent.Hand GetFirstHand()
+        public Hand GetFirstHand(int times)
         {
-            string msg = "GetFirstHand()";
-            string ans = this.Send(msg);
+            string msg = String.Format("?=GetFirstHand({0:D});", times);
+            string ans = this.Call(msg);
 
-            var tmp = SampleJankenAgent.Hand.NoHand;
+            var tmp = Hand.NoHand;
 
-            return (Enum.TryParse<SampleJankenAgent.Hand>(ans, out tmp) ? tmp : SampleJankenAgent.Hand.NoHand);
+            return (Enum.TryParse<JankenLib.Hand>(ans, out tmp) ? tmp : Hand.NoHand);
         }
 
-        public SampleJankenAgent.Hand GetSecondHand(SampleJankenAgent.Hand opp1st, SampleJankenAgent.Hand own1st)
+        public Hand GetSecondHand(int times, Hand opp1st)
         {
-            string msg = String.Format("GetSecondHand({0}, {1})", opp1st.ToString(), own1st.ToString());
-            string ans = this.Send(msg);
+            string msg = String.Format("?=GetSecondHand({0:D}, {1:D});", times, opp1st);
+            string ans = this.Call(msg);
 
-            var tmp = SampleJankenAgent.Hand.NoHand;
+            var tmp = Hand.NoHand;
 
-            return (Enum.TryParse<SampleJankenAgent.Hand>(ans, out tmp) ? tmp : SampleJankenAgent.Hand.NoHand);
+            return (Enum.TryParse<JankenLib.Hand>(ans, out tmp) ? tmp : Hand.NoHand);
 
         }
 
-        public SampleJankenAgent.Hand GetThirdHand(SampleJankenAgent.Hand opp2nd, SampleJankenAgent.Hand own2nd, SampleJankenAgent.Hand opp1st, SampleJankenAgent.Hand own1st)
+        public Hand GetThirdHand(int times, Hand opp2nd)
         {
-            string msg = String.Format("GetThirdHand({0}, {1}, {2}, {3})", opp2nd.ToString(), own2nd.ToString(),
-                                                                           opp1st.ToString(), own1st.ToString());
-            string ans = this.Send(msg);
+            string msg = String.Format("?=GetThirdHand({0:D}, {1:D});", times, opp2nd);
+            string ans = this.Call(msg);
 
-            var tmp = SampleJankenAgent.Hand.NoHand;
+            var tmp = Hand.NoHand;
 
-            return (Enum.TryParse<SampleJankenAgent.Hand>(ans, out tmp) ? tmp : SampleJankenAgent.Hand.NoHand);
+            return (Enum.TryParse<JankenLib.Hand>(ans, out tmp) ? tmp : Hand.NoHand);
 
         }
+        public void SetResult(int times, int result, Hand opp3rd){
+            string msg = String.Format("SetResult({0:D}, {1:D}, {2:D}", times, result, opp3rd);
+            this.Send(msg);
 
-        private String Send(String msg)
+            return;
+        }
+
+        private void Send(String msg)
+        {
+            try
+            {
+                byte[] sendBytes = new byte[64];
+
+                if (!client.Connected)
+                {
+                    return ;
+                }
+
+                // ネットワークストリームの取得
+                System.Net.Sockets.NetworkStream ns = client.GetStream();
+                ns.ReadTimeout = 100;       // 100msのタイムアウトとする
+
+                // 送信
+                byte[] buff = System.Text.Encoding.ASCII.GetBytes(msg);
+                Buffer.BlockCopy(buff, 0, sendBytes, 0, buff.Length);
+                ns.Write(sendBytes, 0, 64);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private String Call(String msg)
         {
             try
             {
@@ -84,13 +119,13 @@ namespace JankenReferee
 
                 // 受信
                 int resSize;
-                byte[] resBytes = new byte[256];
+                byte[] resBytes = new byte[64];
                 var ms = new System.IO.MemoryStream();
                 do
                 {
                     resSize = ns.Read(resBytes, 0, resBytes.Length);
                     ms.Write(resBytes, 0, resSize);
-                } while (ns.DataAvailable);
+                } while (ms.Length < 64);
 
                 String ret = System.Text.Encoding.ASCII.GetString(ms.ToArray()).TrimEnd('\0');
 

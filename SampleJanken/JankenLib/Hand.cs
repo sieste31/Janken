@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace SampleJankenAgent
+namespace JankenLib
 {
     public enum Hand
     {
-        Rock,
-        Papper,
-        Scissors,
-        NoHand,
+        NoHand = -1,
+        Rock = 0,
+        Scissors = 1,
+        Papper = 2,
     }
 
     public static class HandExtention
@@ -38,10 +38,10 @@ namespace SampleJankenAgent
                 return 1;
             }
 
-            // 差を調べて1だったら勝ち
+            // 差を調べて2だったら勝ち
             int diff =  (own - opp + 3) % 3;
 
-            if (diff == 1)
+            if (diff == 2)
             {
                 return 1;
             }

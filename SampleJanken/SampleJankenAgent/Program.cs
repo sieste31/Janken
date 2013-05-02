@@ -33,7 +33,7 @@ namespace SampleJankenAgent
 
                 Console.WriteLine("Connect!");
 
-                var jankenServer = new JankenServer(client, new SampleAgent("SAMPLE"));
+                var jankenServer = new JankenLib.JankenServer(client, new SampleAgent("SAMPLE"));
                 jankenServer.Start();
 
                 jankenServer.Stop();

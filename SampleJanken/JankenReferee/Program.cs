@@ -4,28 +4,54 @@ using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 
-using SampleJankenAgent;
+using JankenLib;
+using System.Net;
 
 namespace JankenReferee
 {
     class Program
     {
+        static void PrintUsage()
+        {
+            Console.WriteLine("USAGE: JankenReferee TIME IPADDRESS1, PORT1, IPADDRESS2, PORT2");
+        }
+
         static void Main(string[] args)
         {
-            JankenProxy proxy1;
-            JankenProxy proxy2;
+            IPEndPoint ep1, ep2;
+            TcpClient client1, client2;
+            int time = 0;
 
+            // 引数→IP, port
             try
             {
-                proxy1 = new JankenProxy(new TcpClient("127.0.0.1", 49999));
-                proxy2 = new JankenProxy(new TcpClient("127.0.0.1", 50000));
+                time = Int32.Parse(args[0]);
+                ep1 = new IPEndPoint(IPAddress.Parse(args[1]), Int32.Parse(args[2]));
+                ep2 = new IPEndPoint(IPAddress.Parse(args[3]), Int32.Parse(args[4]));
+            }
+            catch (Exception)
+            {
+                PrintUsage();
+                return;
+            }
+
+            // 接続
+            try
+            {
+                client1 = new TcpClient();
+                client1.Connect(ep1);
+
+                client2 = new TcpClient();
+                client2.Connect(ep2);
             }
             catch (Exception e)
             {
-                // エラーでたら終了
                 Console.WriteLine(e.Message);
                 return;
             }
+
+            JankenProxy proxy1 = new JankenProxy(client1);
+            JankenProxy proxy2 = new JankenProxy(client2);
 
             try
             {
@@ -35,33 +61,31 @@ namespace JankenReferee
 
                 var hands = new Hand[2, 3];
 
-                int win = 0;
+                int p1_win = 0;
                 int draw = 0;
-                int loose = 0;
+                int p2_win = 0;
 
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < time; i++)
                 {
                     // 1手目
-                    hands[0, 0] = proxy1.GetFirstHand();
-                    hands[1, 0] = proxy1.GetFirstHand();
+                    hands[0, 0] = proxy1.GetFirstHand(i);
+                    hands[1, 0] = proxy1.GetFirstHand(i);
 
                     // 2手目
-                    hands[0, 1] = proxy1.GetSecondHand(hands[1, 0], hands[0, 0]);
-                    hands[1, 1] = proxy2.GetSecondHand(hands[0, 0], hands[1, 0]);
+                    hands[0, 1] = proxy1.GetSecondHand(i, hands[1, 0]);
+                    hands[1, 1] = proxy2.GetSecondHand(i, hands[0, 0]);
 
                     // 3手目
-                    hands[0, 2] = proxy1.GetThirdHand(hands[1, 1], hands[0, 1], hands[1, 0], hands[0, 0]);
-                    hands[1, 2] = proxy2.GetThirdHand(hands[0, 1], hands[1, 1], hands[0, 0], hands[1, 0]);
+                    hands[0, 2] = proxy1.GetThirdHand(i, hands[1, 1]);
+                    hands[1, 2] = proxy2.GetThirdHand(i, hands[0, 1]);
 
-
+                    // 勝敗の記録
                     int diff = hands[0, 2].CompareStrong(hands[1, 2]);
-                    if (diff == 1) win++;
+                    if (diff == 1) p1_win++;
                     if (diff == 0) draw++;
-                    if (diff == -1) loose++;
-
-                    Console.WriteLine(String.Format("{0}戦目 結果:{1}", i, diff));
+                    if (diff == -1) p2_win++;
                 }
-                Console.WriteLine(String.Format("{0}:{1}:{2}", win, draw, loose));
+                Console.WriteLine(String.Format("{0}:{1}:{2}", p1_win, draw, p2_win));
             }
             catch (Exception e)
             {
@@ -73,7 +97,5 @@ namespace JankenReferee
                 proxy2.Close();
             }
         }
-
-
     }
 }

@@ -7,40 +7,19 @@ using JankenLib;
 
 namespace SampleJankenAgent
 {
-    public static class DictionaryExtension
-    {
-        public static void Set(this Dictionary<int, Hands> own, int key, Action<Hands> act)
-        {
-            if (own.ContainsKey(key))
-            {
-                act(own[key]);
-            }
-            else
-            {
-                Hands h = new Hands();
-                act(h);
-                own.Add(key, h);
-            }
-        }
-    }
+
 
     class SampleAgent : IJanken
     {
         private string name;
-        private Dictionary<int, Hands> ownHands;
-        private Dictionary<int, Hands> oppHands;
+        private Dictionary<int, Pair<Hands, Hands>> recorder;
         private Random rand;
-
-
 
         public SampleAgent(string name)
         {
             this.name = name;
-            this.ownHands = new Dictionary<int, Hands>();
-            this.oppHands = new Dictionary<int, Hands>();
-            int time = Environment.TickCount;
-            rand = new Random(time);
-            Console.WriteLine("SEED " + time);
+            this.recorder = new Dictionary<int, Pair<Hands, Hands>>();
+            rand = new Random(Environment.TickCount);
         }
 
         public string GetName()
@@ -53,47 +32,52 @@ namespace SampleJankenAgent
             // ランダムに手を出す
             Hand randHand = (Hand)rand.Next(3);
 
-            ownHands.Set(times, h => h.First = randHand);   // 自分の手を記録
+            // 記録 自分の1手目
+            recorder.Set(times, (h1, h2) => h1.First = randHand);
 
-            Console.WriteLine(times + " F " + ownHands[times].First.ToString());
+            Console.WriteLine(times + " F " + randHand.ToString());
 
             return randHand;
         }
 
         public Hand GetSecondHand(int times, Hand opp1st)
         {
-            oppHands.Set(times, h => h.First = opp1st); // 相手の記録（するだけ）
-
             // ランダムに手を出す
             Hand randHand = (Hand)rand.Next(3);
 
-            ownHands.Set(times, h => h.Second = randHand);   // 自分の記録
-            Console.WriteLine(times + " S " + ownHands[times].Second.ToString());
+            // 記録　自分の2手目, 相手の1手目
+            recorder.Set(times, (h1, h2) =>
+            {
+                h1.Second = randHand;
+                h2.First = opp1st;
+            });
+
+            Console.WriteLine(times + " S " + randHand.ToString());
             return randHand;
         }
 
         public Hand GetThirdHand(int times, Hand opp2nd)
         {
-            oppHands.Set(times, h => h.Second = opp2nd); // 相手の記録（するだけ）
-
             // 自分の１手目と２手目のどちらかをランダムに出す
             int r = rand.Next(2);
 
-            ownHands.Set(times, h => h.Third = (rand.Next(2) == 0 ? h.First : h.Second));   // 自分の記録
-
-            if (ownHands[times].First != ownHands[times].Second
-                & ownHands[times].Second != ownHands[times].Third
-                & ownHands[times].Third != ownHands[times].First)
+            // 記録　自分の3手目, 相手の2手目
+            recorder.Set(times, (h1, h2) =>
             {
-                Console.WriteLine("ERROR");
-            }
-            Console.WriteLine(times + " T " + ownHands[times].Third.ToString());
-            return ownHands[times].Third;
+                h1.Third = (rand.Next(2) == 0 ? h1.First : h1.Second);
+                h2.Second = opp2nd;
+            });
+
+            // 自身の手を取得
+            Hands own = recorder.Get(times).First;
+            Console.WriteLine(times + " T " + own.Third.ToString());
+            return own.Third;
         }
 
-        public void SetResult(int times, int result, Hand opp3rd)
+        public void SetResult(int times, VictoryOrDefeat result, Hand opp3rd)
         {
-            oppHands.Set(times, h => h.Third = opp3rd); // 相手の記録（するだけ）
+            // 記録　相手の3手目
+            recorder.Set(times, (h1, h2) => h2.Second = opp3rd);
         }
     }
 }

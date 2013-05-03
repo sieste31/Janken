@@ -11,6 +11,6 @@ namespace JankenLib
         Hand GetFirstHand(int times);
         Hand GetSecondHand(int times, Hand opp1st);
         Hand GetThirdHand(int times, Hand opp2nd);
-        void SetResult(int times, int result, Hand opp3rd);
+        void SetResult(int times, VictoryOrDefeat result, Hand opp3rd);
     }
 }

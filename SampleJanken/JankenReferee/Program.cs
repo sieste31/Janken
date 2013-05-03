@@ -59,7 +59,10 @@ namespace JankenReferee
                 Console.WriteLine("player1 name is " + proxy1.GetName());
                 Console.WriteLine("player2 name is " + proxy2.GetName());
 
-                var hands = new Hand[2, 3];
+                //var recorder = new Dictionary<int , Pair<Hands, Hands>>();
+
+                var h1 = new Hands();
+                var h2 = new Hands();    // 一時保管用
 
                 int p1_win = 0;
                 int draw = 0;
@@ -68,27 +71,40 @@ namespace JankenReferee
                 for (int i = 1; i <= time; i++)
                 {
                     // 1手目
-                    hands[0, 0] = proxy1.GetFirstHand(i);
-                    hands[1, 0] = proxy2.GetFirstHand(i);
+                    h1.First = proxy1.GetFirstHand(i);
+                    h2.First = proxy2.GetFirstHand(i);
 
                     // 2手目
-                    hands[0, 1] = proxy1.GetSecondHand(i, hands[1, 0]);
-                    hands[1, 1] = proxy2.GetSecondHand(i, hands[0, 0]);
+                    h1.Second = proxy1.GetSecondHand(i, h2.First);
+                    h2.Second = proxy2.GetSecondHand(i, h1.First);
 
                     // 3手目
-                    hands[0, 2] = proxy1.GetThirdHand(i, hands[1, 1]);
-                    hands[1, 2] = proxy2.GetThirdHand(i, hands[0, 1]);
-
-                    Console.WriteLine("{0},{1},{2}:{3},{4},{5}", hands[0, 0], hands[0, 1], hands[0, 2],
-                                                                 hands[1, 0], hands[1, 1], hands[1, 2]);
+                    h1.Third = proxy1.GetThirdHand(i, h2.Second);
+                    h2.Third = proxy2.GetThirdHand(i, h1.Second);
 
                     // 勝敗の記録
-                    int diff = hands[0, 2].CompareStrong(hands[1, 2]);
-                    if (diff == 1) p1_win++;
-                    if (diff == 0) draw++;
-                    if (diff == -1) p2_win++;
+                    VictoryOrDefeat result = h1.CompareStrength(h2);
+                    if (result > 0)
+                    {
+                        Console.WriteLine("{0, 4} : {1} <  {2}", i, h1.ToString(), h2.ToString());
+                        p1_win++;   // 0より大きい場合はplayer1の勝ち
+                    }
+                    if (result == 0)
+                    {
+                        Console.WriteLine("{0, 4} : {1} <> {2}", i, h1.ToString(), h2.ToString());
+                        draw++;    // 0のときは引き分け
+                    }
+                    if (result < 0)
+                    {
+                        Console.WriteLine("{0, 4} : {1}  > {2}", i, h1.ToString(), h2.ToString());
+                        p2_win++;   // 0より小さい場合はplayer2の勝ち
+                    }
+
+                    // 結果報告
+                    proxy1.SetResult(i, result, h2.Third);
+                    proxy2.SetResult(i, result.Reverse(), h1.Third);
                 }
-                Console.WriteLine(String.Format("{0}:{1}:{2}", p1_win, draw, p2_win));
+                Console.WriteLine(String.Format("(P1_WIN, DRAW, P2_WIN) = ({0},{1},{2})", p1_win, draw, p2_win));
             }
             catch (Exception e)
             {

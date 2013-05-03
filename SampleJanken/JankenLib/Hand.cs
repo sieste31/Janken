@@ -22,20 +22,20 @@ namespace JankenLib
         /// <param name="own">自分の手</param>
         /// <param name="opp">相手の手</param>
         /// <returns>自身の勝ちなら1, 引き分け0, 負け-1</returns>
-        public static int CompareStrong(this Hand own, Hand opp)
+        public static VictoryOrDefeat CompareStrong(this Hand own, Hand opp)
         {
             if (own == opp)
             {
-                return 0;
+                return VictoryOrDefeat.Draw;
             }
 
             if (own == Hand.NoHand)
             {
-                return -1;
+                return VictoryOrDefeat.Lost;
             }
             if (opp == Hand.NoHand)
             {
-                return 1;
+                return VictoryOrDefeat.Win;
             }
 
             // 差を調べて2だったら勝ち
@@ -43,11 +43,11 @@ namespace JankenLib
 
             if (diff == 2)
             {
-                return 1;
+                return VictoryOrDefeat.Win;
             }
             else
             {
-                return -1;
+                return VictoryOrDefeat.Lost;
             }
         }
     }

@@ -83,7 +83,10 @@ namespace JankenLib
                     if (resMsg != "")
                     {
                         byte[] sendBytes = CallMethod(resMsg);
-                        ns.Write(sendBytes, 0, sendBytes.Length);
+                        if (sendBytes != null)
+                        {
+                            ns.Write(sendBytes, 0, sendBytes.Length);
+                        }
                     }
                 }
             }
@@ -124,7 +127,7 @@ namespace JankenLib
             {
                 case "SetResult":
                     {
-                        this.handler.SetResult(argc[0], argc[1], (Hand)argc[2]);
+                        this.handler.SetResult(argc[0], (VictoryOrDefeat)argc[1], (Hand)argc[2]);
                         break;
                     }
                 case "GetName":

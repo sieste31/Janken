@@ -64,8 +64,8 @@ namespace JankenReferee
             return (Enum.TryParse<JankenLib.Hand>(ans, out tmp) ? tmp : Hand.NoHand);
 
         }
-        public void SetResult(int times, int result, Hand opp3rd){
-            string msg = String.Format("SetResult({0:D}, {1:D}, {2:D}", times, result, opp3rd);
+        public void SetResult(int times, VictoryOrDefeat result, Hand opp3rd){
+            string msg = String.Format("SetResult({0:D}, {1:D}, {2:D});", times, result, opp3rd);
             this.Send(msg);
 
             return;
